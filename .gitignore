@@ -58,3 +58,6 @@ docker-compose.override.yml
 data/
 *.csv
 *.parquet
+
+# Throwaway manual-testing script
+scratch.py
