@@ -1,0 +1,33 @@
+# Local development infrastructure for Regradar.
+# Starts PostgreSQL with the pgvector extension for vector similarity search.
+#
+# Usage:
+#   docker compose up -d      # start in background
+#   docker compose down       # stop
+#   docker compose logs -f db # follow logs
+
+services:
+  db:
+    # pgvector/pgvector ships PostgreSQL 16 with the pgvector extension
+    # pre-installed, so we don't have to build it ourselves.
+    image: pgvector/pgvector:pg16
+    container_name: regradar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: regradar
+      POSTGRES_PASSWORD: localdev
+      POSTGRES_DB: regradar
+    ports:
+      # host:container — exposes the DB on localhost:5432
+      - "5432:5432"
+    volumes:
+      # Persist data across container restarts.
+      - regradar_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U regradar -d regradar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  regradar_pgdata:

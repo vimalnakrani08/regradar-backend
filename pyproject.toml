@@ -5,8 +5,13 @@ description = "AI-powered Federal Register search and regulatory alerts"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
     "httpx>=0.28.1",
+    "pgvector>=0.4.2",
     "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "sqlalchemy[asyncio]>=2.0.50",
 ]
 
 [dependency-groups]
@@ -21,6 +26,7 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "C4", "UP", "N", "W"]
