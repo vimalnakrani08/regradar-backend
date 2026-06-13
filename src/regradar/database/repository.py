@@ -8,7 +8,7 @@ and makes the code easy to test and change.
 
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -123,6 +123,38 @@ class DocumentRepository:
             for index, section, content, embedding in chunks
         )
         return len(chunks)
+
+    async def count_documents(self) -> int:
+        """Return the total number of stored documents.
+
+        Used alongside list_documents to give clients pagination metadata.
+        """
+        stmt = select(func.count()).select_from(Document)
+        result = await self._session.execute(stmt)
+        return result.scalar_one()
+
+    async def list_documents(self, *, limit: int = 20, offset: int = 0) -> list[Document]:
+        """List documents, most recently published first.
+
+        Ordering by publication_date (descending) puts the newest rules at
+        the top — the natural default for a feed-style frontend. The id-like
+        document_number breaks ties deterministically so pagination is stable.
+
+        Args:
+            limit: Maximum number of documents to return.
+            offset: Number of documents to skip (for pagination).
+
+        Returns:
+            The requested page of documents.
+        """
+        stmt = (
+            select(Document)
+            .order_by(Document.publication_date.desc(), Document.document_number.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
 
     async def search_chunks(
         self,
