@@ -47,6 +47,36 @@ class Settings(BaseSettings):
         description="OpenAI embedding model name.",
     )
 
+    anthropic_api_key: str = Field(
+        default="",
+        description="Anthropic API key, used for RAG answer generation.",
+    )
+
+    answer_model: str = Field(
+        default="claude-opus-4-8",
+        description="Anthropic model used to generate cited answers.",
+    )
+
+    answer_max_tokens: int = Field(
+        default=1024,
+        description="Maximum output tokens for a generated answer.",
+    )
+
+    similarity_threshold: float = Field(
+        default=0.3,
+        description=(
+            "Minimum cosine similarity (1.0 = identical) for a chunk to be "
+            "treated as relevant. Below this for every retrieved chunk, we "
+            "skip the LLM and return an honest 'no information' answer. Floor "
+            "starts ~0.3; tune on real data."
+        ),
+    )
+
+    retrieval_top_k: int = Field(
+        default=5,
+        description="Number of chunks to retrieve as candidate context for an answer.",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:
