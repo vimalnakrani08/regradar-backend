@@ -80,6 +80,15 @@ class Settings(BaseSettings):
         description="Number of chunks to retrieve as candidate context for an answer.",
     )
 
+    cors_origins: list[str] = Field(
+        default=["http://localhost:3000"],
+        description=(
+            "Origins allowed to call the API from a browser. Defaults to the "
+            "local Next.js dev server; add the production frontend origin "
+            "(e.g. https://regradar.app) via the CORS_ORIGINS env var."
+        ),
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:
