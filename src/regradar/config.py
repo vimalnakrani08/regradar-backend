@@ -63,12 +63,15 @@ class Settings(BaseSettings):
     )
 
     similarity_threshold: float = Field(
-        default=0.3,
+        default=0.45,
         description=(
             "Minimum cosine similarity (1.0 = identical) for a chunk to be "
             "treated as relevant. Below this for every retrieved chunk, we "
-            "skip the LLM and return an honest 'no information' answer. Floor "
-            "starts ~0.3; tune on real data."
+            "skip the LLM and return an honest 'no information' answer. Tuned "
+            "on the current corpus, where genuine matches score ~0.60-0.65 and "
+            "adjacent-but-irrelevant noise scores ~0.33-0.36, so 0.45 cleanly "
+            "gates out-of-scope questions before any LLM spend. Revisit as the "
+            "corpus grows."
         ),
     )
 
