@@ -37,6 +37,16 @@ class Settings(BaseSettings):
         description="Vector dimension for embeddings (OpenAI text-embedding-3-small).",
     )
 
+    openai_api_key: str = Field(
+        default="",
+        description="OpenAI API key, used for embeddings.",
+    )
+
+    embedding_model: str = Field(
+        default="text-embedding-3-small",
+        description="OpenAI embedding model name.",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -8,6 +8,7 @@ dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
     "httpx>=0.28.1",
+    "openai>=2.41.1",
     "pgvector>=0.4.2",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.1",
