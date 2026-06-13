@@ -35,6 +35,9 @@ class FederalRegisterDocument(BaseModel):
         default=None, description="Public comment deadline, if applicable"
     )
     agencies: list[Agency] = Field(default_factory=list)
+    raw_text_url: HttpUrl | None = Field(
+        default=None, description="URL to the document's full plain text"
+    )
 
     model_config = {"populate_by_name": True}
 

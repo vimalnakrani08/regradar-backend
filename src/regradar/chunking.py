@@ -53,13 +53,15 @@ def _count_tokens(text: str) -> int:
 def _split_into_sections(text: str) -> list[tuple[str | None, str]]:
     """Split document text into (section_name, section_text) pairs.
 
-    Detects canonical FR section headers at line starts. Text before the
-    first recognized header gets section name None.
+    Detects canonical FR section headers at line starts. Headers may be
+    alone on a line ("SUMMARY:") or inline with content following
+    ("SUMMARY: The EPA proposes..."). Text before the first recognized
+    header gets section name None.
     """
-    # Build a regex matching any canonical header at a line start,
-    # optionally followed by a colon.
+    # Match a canonical header at a line start, followed by an optional
+    # colon. Content may follow on the same line.
     pattern = re.compile(
-        r"^(" + "|".join(re.escape(h) for h in _SECTION_HEADERS) + r"):?\s*$",
+        r"^(" + "|".join(re.escape(h) for h in _SECTION_HEADERS) + r"):?",
         re.MULTILINE,
     )
 
@@ -74,7 +76,6 @@ def _split_into_sections(text: str) -> list[tuple[str | None, str]]:
         last_header = match.group(1)
         last_end = match.end()
 
-    # Remaining text after the final header.
     tail = text[last_end:].strip()
     if tail:
         sections.append((last_header, tail))

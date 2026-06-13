@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import date
 from typing import Any
+from bs4 import BeautifulSoup
 
 import httpx
 
@@ -29,6 +30,7 @@ _REQUESTED_FIELDS = [
     "html_url",
     "comments_close_on",
     "agencies",
+    "raw_text_url",
 ]
 
 
@@ -99,3 +101,23 @@ class FederalRegisterClient:
         response.raise_for_status()
 
         return DocumentSearchResponse.model_validate(response.json())
+
+    async def fetch_document_text(self, raw_text_url: str) -> str:
+        """Fetch the full plain text of a document.
+
+        The raw_text_url returns lightly HTML-wrapped content, so we
+        strip markup and return clean text.
+
+        Args:
+            raw_text_url: The document's raw_text_url from the API.
+
+        Returns:
+            The document's full text with HTML removed.
+
+        Raises:
+            httpx.HTTPStatusError: If the fetch fails.
+        """
+        response = await self._client.get(raw_text_url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        return soup.get_text()
