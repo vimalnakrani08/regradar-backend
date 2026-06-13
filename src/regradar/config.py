@@ -80,6 +80,20 @@ class Settings(BaseSettings):
         description="Number of chunks to retrieve as candidate context for an answer.",
     )
 
+    search_similarity_threshold: float = Field(
+        default=0.45,
+        description=(
+            "Minimum cosine similarity for a chunk to be returned by semantic "
+            "search. Below this, results are dropped rather than shown, so the "
+            "search surface never implies relevance that isn't there (the same "
+            "honesty principle as the answer threshold). Defaults to 0.45 to "
+            "match the answer threshold, but search is a slightly different use "
+            "case — a user sometimes wants to see weaker-but-real matches and "
+            "judge for themselves — so this may want to be tuned a touch lower "
+            "than the answer threshold once we see real usage. Tune on real data."
+        ),
+    )
+
     cors_origins: list[str] = Field(
         default=["http://localhost:3000"],
         description=(
