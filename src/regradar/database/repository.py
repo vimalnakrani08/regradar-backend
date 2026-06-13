@@ -108,10 +108,6 @@ class DocumentRepository:
         Returns:
             Number of chunks stored.
         """
-        from sqlalchemy import delete
-
-        from regradar.database.models import DocumentChunk
-
         await self._session.execute(
             delete(DocumentChunk).where(DocumentChunk.document_number == document_number)
         )

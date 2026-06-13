@@ -8,12 +8,12 @@ API docs: https://www.federalregister.gov/developers/documentation/api/v1
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Any
-from bs4 import BeautifulSoup
-import re
 
 import httpx
+from bs4 import BeautifulSoup
 
 from regradar.models import DocumentSearchResponse
 
