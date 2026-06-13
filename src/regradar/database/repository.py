@@ -127,3 +127,30 @@ class DocumentRepository:
             for index, section, content, embedding in chunks
         )
         return len(chunks)
+
+    async def search_chunks(
+        self,
+        query_embedding: list[float],
+        *,
+        limit: int = 10,
+    ) -> list[tuple[DocumentChunk, float]]:
+        """Find the chunks most semantically similar to a query embedding.
+
+        Uses pgvector's cosine distance (the <=> operator) against the
+        HNSW index. Returns chunks ordered from most to least similar,
+        each paired with its similarity score (1.0 = identical meaning,
+        0.0 = unrelated).
+
+        Args:
+            query_embedding: The embedded query vector (1536 dims).
+            limit: Maximum number of chunks to return.
+
+        Returns:
+            List of (chunk, similarity_score) tuples, best match first.
+        """
+        # cosine_distance returns 0 (identical) to 2 (opposite).
+        # similarity = 1 - distance gives an intuitive 1=identical score.
+        distance = DocumentChunk.embedding.cosine_distance(query_embedding)
+        stmt = select(DocumentChunk, distance.label("distance")).order_by(distance).limit(limit)
+        result = await self._session.execute(stmt)
+        return [(row[0], 1.0 - row[1]) for row in result.all()]
