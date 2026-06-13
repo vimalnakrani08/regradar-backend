@@ -11,6 +11,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 from bs4 import BeautifulSoup
+import re
 
 import httpx
 
@@ -32,6 +33,22 @@ _REQUESTED_FIELDS = [
     "agencies",
     "raw_text_url",
 ]
+
+# Matches control characters that PostgreSQL text columns reject or that
+# corrupt downstream processing: null bytes and other C0 control chars,
+# except the whitespace we want to keep (tab, newline, carriage return).
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def _clean_text(text: str) -> str:
+    """Remove control characters that break storage or processing.
+
+    Federal Register raw text occasionally contains stray null bytes and
+    other control characters (artifacts of PDF-to-text conversion).
+    These are stripped while preserving tabs, newlines, and carriage
+    returns.
+    """
+    return _CONTROL_CHARS.sub("", text)
 
 
 class FederalRegisterClient:
@@ -120,4 +137,4 @@ class FederalRegisterClient:
         response = await self._client.get(raw_text_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
-        return soup.get_text()
+        return _clean_text(soup.get_text())

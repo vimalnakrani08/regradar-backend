@@ -13,9 +13,20 @@ from pydantic import BaseModel, Field, HttpUrl
 
 
 class Agency(BaseModel):
-    """A government agency that issued a document."""
+    """A government agency that issued a document.
 
-    name: str
+    The Federal Register API usually provides `name`, but some
+    sub-agencies provide only `raw_name`. We accept either and expose a
+    single `display_name`.
+    """
+
+    name: str | None = Field(default=None)
+    raw_name: str | None = Field(default=None)
+
+    @property
+    def display_name(self) -> str:
+        """Best available human-readable agency name."""
+        return self.name or self.raw_name or "Unknown agency"
 
 
 class FederalRegisterDocument(BaseModel):
@@ -43,8 +54,8 @@ class FederalRegisterDocument(BaseModel):
 
     @property
     def agency_names(self) -> list[str]:
-        """Convenience accessor for just the agency names."""
-        return [agency.name for agency in self.agencies]
+        """Convenience accessor for agency display names."""
+        return [agency.display_name for agency in self.agencies]
 
 
 class DocumentSearchResponse(BaseModel):

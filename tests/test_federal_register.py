@@ -99,3 +99,50 @@ async def test_search_documents_raises_on_server_error() -> None:
     async with FederalRegisterClient() as client:
         with pytest.raises(httpx.HTTPStatusError):
             await client.search_documents()
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_agency_with_only_raw_name() -> None:
+    """An agency providing only raw_name should still resolve a name."""
+    payload = {
+        "count": 1,
+        "results": [
+            {
+                "document_number": "2026-99999",
+                "title": "Test Rule",
+                "type": "Proposed Rule",
+                "abstract": None,
+                "publication_date": "2026-06-12",
+                "html_url": "https://www.federalregister.gov/documents/test",
+                "comments_close_on": None,
+                "agencies": [
+                    {"name": "Defense Department"},
+                    {"raw_name": "Office of the Secretary"},
+                ],
+            }
+        ],
+    }
+    respx.get("https://www.federalregister.gov/api/v1/documents.json").mock(
+        return_value=httpx.Response(200, json=payload)
+    )
+
+    async with FederalRegisterClient() as client:
+        result = await client.search_documents(per_page=1)
+
+    assert result.results[0].agency_names == [
+        "Defense Department",
+        "Office of the Secretary",
+    ]
+
+
+def test_clean_text_strips_null_bytes() -> None:
+    """Null bytes and control chars are removed; normal whitespace kept."""
+    from regradar.clients.federal_register import _clean_text
+
+    dirty = "Hello\x00World\tTabbed\nNewline\x07Bell"
+    cleaned = _clean_text(dirty)
+
+    assert "\x00" not in cleaned
+    assert "\x07" not in cleaned
+    assert cleaned == "HelloWorld\tTabbed\nNewlineBell"

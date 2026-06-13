@@ -8,11 +8,11 @@ and makes the code easy to test and change.
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from regradar.database.models import Document
+from regradar.database.models import Document, DocumentChunk
 from regradar.models import FederalRegisterDocument
 
 
@@ -90,3 +90,40 @@ class DocumentRepository:
 
         await self._session.execute(stmt)
         return len(documents)
+
+    async def replace_chunks(
+        self,
+        document_number: str,
+        chunks: list[tuple[int, str | None, str, list[float]]],
+    ) -> int:
+        """Replace all chunks for a document with a new set.
+
+        Deleting-then-inserting keeps re-ingestion idempotent: running
+        ingestion twice never duplicates chunks.
+
+        Args:
+            document_number: The parent document.
+            chunks: Tuples of (chunk_index, section, content, embedding).
+
+        Returns:
+            Number of chunks stored.
+        """
+        from sqlalchemy import delete
+
+        from regradar.database.models import DocumentChunk
+
+        await self._session.execute(
+            delete(DocumentChunk).where(DocumentChunk.document_number == document_number)
+        )
+
+        self._session.add_all(
+            DocumentChunk(
+                document_number=document_number,
+                chunk_index=index,
+                section=section,
+                content=content,
+                embedding=embedding,
+            )
+            for index, section, content, embedding in chunks
+        )
+        return len(chunks)
